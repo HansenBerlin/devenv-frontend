@@ -31,6 +31,7 @@ h1:focus {
     position: fixed;
     width: 100%;
     z-index: 1000;
+    max-width: 400px;
 }
 
     #blazor-error-ui .dismiss {
@@ -49,3 +50,5 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+    
+    
