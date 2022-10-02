@@ -1,6 +1,7 @@
 ﻿using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using MinimalFrontend.Enums;
 using MinimalFrontend.Models;
 
 namespace MinimalFrontend.Controller;
@@ -10,37 +11,50 @@ namespace MinimalFrontend.Controller;
 public class UserRepositoryController : IUserRepositoryController
 {
     private readonly HttpClient _httpClient;
-    private const string UsersEndpoint = "http://localhost:5000/users";
+    private readonly string _usersEndpoint;
 
-    public UserRepositoryController(HttpClient httpClient)
+    public UserRepositoryController(HttpClient httpClient, string userEndpoint)
     {
         _httpClient = httpClient;
+        _usersEndpoint = userEndpoint;
     }
 
-    public async Task<ServiceUser[]> GetAllUsers()
+    public async Task<UserGetRequestResponseModel> GetAllUsers()
     {
-        return await _httpClient.GetFromJsonAsync<ServiceUser[]>(UsersEndpoint);
-        //return response ?? Array.Empty<ServiceUser>();
-
+        using var httpResponseMessage = await _httpClient.GetAsync(_usersEndpoint);
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.ReadMultiple);
     }
     
-    public async Task<ServiceUser[]> GetAllUsersByAge(int maxAge)
+    public async Task<UserGetRequestResponseModel> GetAllUsersByAge(int minAge)
     {
-        return await _httpClient.GetFromJsonAsync<ServiceUser[]>($"{UsersEndpoint}/age/{maxAge}");
-        //return response ?? Array.Empty<ServiceUser>();
+        using var httpResponseMessage = await _httpClient.GetAsync($"{_usersEndpoint}/age/{minAge}");
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.ReadMultiple);
     }
     
-    public async Task<ServiceUser> GetUserById(int iD)
+    public async Task<UserGetRequestResponseModel> GetUserById(int iD)
     {
-        return await _httpClient.GetFromJsonAsync<ServiceUser>($"{UsersEndpoint}/{iD}");
-        //return response ?? new ServiceUser();
+        using var httpResponseMessage = await _httpClient.GetAsync($"{_usersEndpoint}/{iD}");
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.ReadSingle);
     }
     
-    public async Task Create(string name, string mail, int age)
+    public async Task<UserGetRequestResponseModel> Create(string name, string mail, int age)
     {
         var json = ConvertToJson(0, name, mail, age);
-        using var httpResponseMessage = await _httpClient.PostAsync(UsersEndpoint, json);
-        httpResponseMessage.EnsureSuccessStatusCode();
+        using var httpResponseMessage = await _httpClient.PostAsync(_usersEndpoint, json);
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.Created);
+    }
+
+    public async Task<UserGetRequestResponseModel> Delete(int iD)
+    {
+        using var httpResponseMessage = await _httpClient.DeleteAsync($"{_usersEndpoint}/{iD}");
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.Deleted);
+    }
+
+    public async Task<UserGetRequestResponseModel> Update(int iD, string name, string mail, int age)
+    {
+        var json = ConvertToJson(iD, name, mail, age);
+        using var httpResponseMessage = await _httpClient.PutAsync(_usersEndpoint, json);
+        return await CreateResponseModel(httpResponseMessage, UserRepositoryActions.Updated);
     }
 
     private StringContent ConvertToJson(int iD, string name, string mail, int age)
@@ -59,15 +73,36 @@ public class UserRepositoryController : IUserRepositoryController
         return todoItemJson;
     }
 
-    public async Task Delete(int iD)
+    private async Task<UserGetRequestResponseModel> CreateResponseModel(HttpResponseMessage httpResponseMessage, UserRepositoryActions action)
     {
-        await _httpClient.DeleteAsync(UsersEndpoint);
-    }
+        List<ServiceUser> users = new();
+        string errorResponse = "";
+        var responseStatus = ResponseStatus.Failed;
+        if (httpResponseMessage.IsSuccessStatusCode && action == UserRepositoryActions.ReadMultiple)
+        {
+            var content = await httpResponseMessage.Content.ReadFromJsonAsync<ServiceUser[]>();
+            users.AddRange(content ?? Array.Empty<ServiceUser>());
+        }
+        else if (httpResponseMessage.IsSuccessStatusCode && action == UserRepositoryActions.ReadSingle)
+        {
+            var content = await httpResponseMessage.Content.ReadFromJsonAsync<ServiceUser>();
+            users.Add(content);
+        }
 
-    public async Task Update(int iD, string name, string mail, int age)
-    {
-        var json = ConvertToJson(iD, name, mail, age);
-        using var httpResponseMessage = await _httpClient.PutAsync(UsersEndpoint, json);
-        httpResponseMessage.EnsureSuccessStatusCode();
+        if (httpResponseMessage.IsSuccessStatusCode)
+        {
+            responseStatus = ResponseStatus.OK;
+        }
+        else
+        {
+            errorResponse = await httpResponseMessage.Content.ReadAsStringAsync();
+        }
+
+        var message = httpResponseMessage.IsSuccessStatusCode ? 
+            $"User successfully {action}." : 
+            $"User couldn't be {action}. Message: {errorResponse}.";
+        
+        
+        return new UserGetRequestResponseModel(users, message, responseStatus);
     }
 }

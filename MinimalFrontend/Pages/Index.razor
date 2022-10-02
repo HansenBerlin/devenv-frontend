@@ -1,13 +1,10 @@
 @page "/"
 @using Microsoft.Fast.Components.FluentUI
-@using MinimalFrontend.Controller
-@using MinimalFrontend.Models
-@inject IUserRepositoryController _userRepositoryController
 
 <div class="center">
-    <FluentTabs id="myTab" activeId="TabOne" style="margin: auto; text-align: center">
+    <FluentTabs id="myTab" style="margin: auto; text-align: center" @bind-ActiveId="_activeTabId">
         <FluentTab id="TabOne">Update persons</FluentTab>
-        <FluentTab id="TabTwo">Get persons by max age</FluentTab>
+        <FluentTab id="TabTwo">Get persons by min age</FluentTab>
         <FluentTab id="TabThree">Get specific person by id</FluentTab>
         <FluentTab id="TabFour">Add new person</FluentTab>
         <FluentTab id="TabFive">Change person data</FluentTab>
@@ -23,8 +20,8 @@
         <FluentTabPanel id="TabPanelTwo">
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
-                <p class="cst-p">Enter the maximum age and commit to get a list of persons of that age or less.</p>
-                <FluentNumberField Min="0" Max="100" @bind-Value="@_selectedAge" style="width: 400px"></FluentNumberField>
+                <p class="cst-p">Enter the minimum age and commit to get a list of persons of that age or older.</p>
+                <FluentNumberField Min="0" Max="100" @bind-Value="@_formModel.Age" style="width: 400px"></FluentNumberField>
                 <FluentButton Appearance="Appearance.Accent" @onclick="GetByAge" style="width: 400px">COMMIT</FluentButton>
             </div>
         </FluentTabPanel>
@@ -32,7 +29,7 @@
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
                 <p class="cst-p">Enter an id and commit to search for that specific person.</p>
-                <FluentSelect @bind-Value="@_selectedId" style="width: 400px">
+                <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
                     @foreach (var iD in _userIds)
                     {
                         <FluentOption Value="@iD">@iD</FluentOption>
@@ -45,9 +42,9 @@
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
                 <p class="cst-p">Enter the desired values (all fields required) to add a new person to the database.</p>
-                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="name" @bind-Value="@_createUsername" style="width: 400px"/>
-                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="mail" @bind-value="@_createMail" style="width: 400px"/>
-                <FluentNumberField Min="0" Max="100" Placeholder="age" @bind-Value="@_createAge" style="width: 400px"></FluentNumberField>
+                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="name" @bind-Value="@_formModel.UserName" style="width: 400px"/>
+                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="mail" @bind-value="@_formModel.Mail" style="width: 400px"/>
+                <FluentNumberField Min="0" Max="100" Placeholder="age" @bind-Value="@_formModel.Age" style="width: 400px"></FluentNumberField>
                 <FluentButton Appearance="Appearance.Accent" style="width: 400px"  @onclick="Create">COMMIT</FluentButton>
             </div>
         </FluentTabPanel>
@@ -55,15 +52,15 @@
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
                 <p class="cst-p">Choose a person by its id, change the desired values and commit.</p>
-                <FluentSelect @bind-Value="@_selectedId" style="width: 400px">
+                <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
                     @foreach (var iD in _userIds)
                     {
                         <FluentOption Value="@iD">@iD</FluentOption>
                     }
                 </FluentSelect>
-                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="name" @bind-Value="@_createUsername" style="width: 400px"/>
-                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="mail" @bind-Value="@_createMail" style="width: 400px"/>
-                <FluentNumberField Min="0" Max="100" Placeholder="age" style="width: 400px" @bind-Value= "@_createAge"></FluentNumberField>
+                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="name" @bind-Value="@_formModel.UserName" style="width: 400px"/>
+                <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="mail" @bind-Value="@_formModel.Mail" style="width: 400px"/>
+                <FluentNumberField Min="0" Max="100" Placeholder="age" style="width: 400px" @bind-Value= "@_formModel.Age"></FluentNumberField>
                 <FluentButton Appearance="Appearance.Accent" style="width: 400px" @onclick="Update">COMMIT</FluentButton>
             </div>
         </FluentTabPanel>
@@ -71,88 +68,30 @@
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
                 <p class="cst-p">Choose a person by its id and commit to delete it from the database.</p>
-                <FluentNumberField Min="1" Placeholder="id from person to delete" @bind-Value="@_selectedId" style="width: 400px"></FluentNumberField>
+                <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
+                    @foreach (var iD in _userIds)
+                    {
+                        <FluentOption Value="@iD">@iD</FluentOption>
+                    }
+                </FluentSelect>
                 <FluentButton Appearance="Appearance.Accent" style="width: 400px" @onclick="Delete">COMMIT</FluentButton>
             </div>
         </FluentTabPanel>
     </FluentTabs>
 </div>
 
-<div class="center">
-    @foreach (var user in _users)
-    {
-        <p>Id: @user.Id | Mail: @user.Mail | Name: @user.UserName | Age: @user.Age</p>
-        <FluentDivider style="width: 777px"/>
-    }
-</div>
-
-@code
+@if (_showStatusMessage)
 {
-    private List<ServiceUser> _users = new();
-    private readonly List<int> _userIds = new();
-    private ServiceUser _selectedUser = new();
-    private int _selectedAge;
-    private int _selectedId = 1;
-    private int _createAge;
-    private string _createUsername = "";
-    private string _createMail = "";
-
-    protected override async Task OnInitializedAsync()
-    {
-        var response = await _userRepositoryController.GetAllUsers();
-        _users = response.ToList();
-        foreach (var user in _users)
-        {
-            _userIds.Add(user.Id);
-        }
-    }
-
-    private async Task FetchAll()
-    {
-        var response = await _userRepositoryController.GetAllUsers();
-        _users = response.ToList();
-        StateHasChanged();
-    }
-
-    private async Task GetByAge()
-    {
-        var response = await _userRepositoryController.GetAllUsersByAge(_selectedAge);
-        _users = response.ToList();
-        StateHasChanged();
-    }
-
-    private async Task GetById()
-    {
-        var response = await _userRepositoryController.GetUserById(_selectedId);
-        _users.Clear();
-        _users.Add(response);
-        StateHasChanged();
-    }
-
-    private async Task Create()
-    {
-        await _userRepositoryController.Create(_createUsername, _createMail, _createAge);
-    }
-
-    private void UpdateBoundValue()
-    {
-        _selectedUser = _users.First(p => p.Id == _selectedId);
-        StateHasChanged();
-    }
-
-    private async Task Update()
-    {
-        await _userRepositoryController.Update(_selectedId, _createUsername, _createMail, _createAge);
-    }
-
-    private async Task Delete()
-    {
-        await _userRepositoryController.Delete(_selectedId);
-    }
-
-    private void UpdateBoundValues()
-    {
-        //
-    }
+    <div style="background-color: @BadgeColor" class="badge">
+        <p class="badge-font">
+            @StatusMessage
+        </p>
+    </div>
 }
 
+@if (_activeTabId is "TabOne" or "TabTwo" or "TabThree")
+{
+    <div class="center">
+        <FluentDataGrid RowsData="_users" ColumnDefinitions="_columnsGrid" GridTemplateColumns="1fr 1fr 1fr 1fr"/>
+    </div>
+}

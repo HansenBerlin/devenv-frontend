@@ -6,7 +6,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddFluentUIComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<IUserRepositoryController, UserRepositoryController>();
+builder.Services.AddScoped<IUserRepositoryController>(sp => new UserRepositoryController(
+    sp.GetService<HttpClient>()!, sp.GetService<IConfiguration>()!["UsersEndpoint"]));
 
 var app = builder.Build();
 

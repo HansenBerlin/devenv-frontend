@@ -6,8 +6,6 @@ h1:focus {
     outline: none;
 }
 
-/* ---- Blazor forms and validation ---- */
-/* https://docs.microsoft.com/en-us/aspnet/core/blazor/forms-validation?view=aspnetcore-6.0#custom-validation-css-class-attributes */
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }
@@ -50,5 +48,13 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+* {
+    font-family: 'Segoe UI', 'Segoe UI Web', Arial, Verdana, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, p{
+    font-family: 'Segoe UI', 'Segoe UI Web', Arial, Verdana, sans-serif;
+}
     
     

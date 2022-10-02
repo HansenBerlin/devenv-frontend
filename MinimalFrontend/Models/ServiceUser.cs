@@ -3,7 +3,7 @@
 public class ServiceUser
 {
     public int Id { get; set; }
-    public string UserName { get; init; } = "";
-    public string Mail { get; init; } = "";
-    public int Age { get; init; }
+    public string UserName { get; set; } = "";
+    public string Mail { get; set; } = "";
+    public int Age { get; set; }
 }
