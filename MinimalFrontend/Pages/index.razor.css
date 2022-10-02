@@ -1,5 +1,5 @@
 ﻿.center {
-    margin: 50px auto auto;
+    margin: auto;
     box-shadow: rgba(0, 0, 0, 0.16) 0 1px 4px;
     border-radius: 4px;
     padding: 5px 20px 20px;
@@ -7,20 +7,28 @@
 }
 
 .badge {
-    margin: 10px auto auto;
-    box-shadow: rgba(0, 0, 0, 0.16) 0 1px 4px;
-    width: 790px;
-    padding: 5px 20px 20px;
+    margin: auto;
+    width: 830px;
     border-radius: 4px;
     text-align: center;
     height: 30px;
+    animation: fading 4s infinite;
 }
+
+@keyframes fading {
+    0% { opacity:0 }
+    10% { opacity:1 }
+    90% { opacity:1 }
+    100% { opacity:0 }
+}
+
 
 .badge-font{
     font-size: 14px;
     color: azure;
     vertical-align: center;
     font-weight: bolder;
+    padding-top: 5px;
 }
 
 .cst-p{

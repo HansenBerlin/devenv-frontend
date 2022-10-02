@@ -1,8 +1,8 @@
 @page "/"
 @using Microsoft.Fast.Components.FluentUI
 
-<div class="center">
-    <FluentTabs id="myTab" style="margin: auto; text-align: center" @bind-ActiveId="_activeTabId">
+<div class="center" style="margin-top:50px; margin-bottom: 20px">
+    <FluentTabs id="myTab" style="margin: auto; text-align: center" >
         <FluentTab id="TabOne">Update persons</FluentTab>
         <FluentTab id="TabTwo">Get persons by min age</FluentTab>
         <FluentTab id="TabThree">Get specific person by id</FluentTab>
@@ -14,7 +14,7 @@
             <FluentDivider style="width: 777px"/>
             <div style="margin: auto;">
                 <p class="cst-p">Commit to get an update from the database.</p>
-                <FluentButton Appearance="Appearance.Accent" @onclick="FetchAll" style="width: 400px">COMMIT</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" @onclick="() => FetchAll(true)" style="width: 400px">COMMIT</FluentButton>
             </div>
         </FluentTabPanel>
         <FluentTabPanel id="TabPanelTwo">
@@ -30,9 +30,9 @@
             <div style="margin: auto;">
                 <p class="cst-p">Enter an id and commit to search for that specific person.</p>
                 <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
-                    @foreach (var iD in _userIds)
+                    @foreach (var user in _currentResponseModel.ServiceUsers)
                     {
-                        <FluentOption Value="@iD">@iD</FluentOption>
+                        <FluentOption Value="@user.Id">@user.Id</FluentOption>
                     }
                 </FluentSelect>
                 <FluentButton Appearance="Appearance.Accent" @onclick="GetById" style="width: 400px">COMMIT</FluentButton>
@@ -53,9 +53,9 @@
             <div style="margin: auto;">
                 <p class="cst-p">Choose a person by its id, change the desired values and commit.</p>
                 <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
-                    @foreach (var iD in _userIds)
+                    @foreach (var user in _currentResponseModel.ServiceUsers)
                     {
-                        <FluentOption Value="@iD">@iD</FluentOption>
+                        <FluentOption Value="@user.Id">@user.Id</FluentOption>
                     }
                 </FluentSelect>
                 <FluentTextField Appearance="Appearance.Accent" Minlength="1" Maxlength="100" Placeholder="name" @bind-Value="@_formModel.UserName" style="width: 400px"/>
@@ -69,9 +69,9 @@
             <div style="margin: auto;">
                 <p class="cst-p">Choose a person by its id and commit to delete it from the database.</p>
                 <FluentSelect @bind-Value="@_formModel.Id" style="width: 400px">
-                    @foreach (var iD in _userIds)
+                    @foreach (var user in _currentResponseModel.ServiceUsers)
                     {
-                        <FluentOption Value="@iD">@iD</FluentOption>
+                        <FluentOption Value="@user.Id">@user.Id</FluentOption>
                     }
                 </FluentSelect>
                 <FluentButton Appearance="Appearance.Accent" style="width: 400px" @onclick="Delete">COMMIT</FluentButton>
@@ -88,10 +88,11 @@
         </p>
     </div>
 }
-
-@if (_activeTabId is "TabOne" or "TabTwo" or "TabThree")
+else
 {
-    <div class="center">
-        <FluentDataGrid RowsData="_users" ColumnDefinitions="_columnsGrid" GridTemplateColumns="1fr 1fr 1fr 1fr"/>
-    </div>
+    <div style="background-color: transparent" class="badge"></div>
 }
+
+<div class="center" style="margin-top: 20px">
+    <FluentDataGrid RowsData="_currentResponseModel.ServiceUsers" ColumnDefinitions="_columnsGrid" GridTemplateColumns="1fr 1fr 1fr 1fr"/>
+</div>
