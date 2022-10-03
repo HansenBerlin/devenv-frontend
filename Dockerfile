@@ -16,10 +16,6 @@ RUN dotnet publish "MinimalFrontend.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 ENV ASPNETCORE_URLS="http://+:80"
-#ENV ASPNETCORE_ENVIRONMENT="Development"
-#ENV ASPNETCORE_ENVIRONMENT="Production"
-ENV ASPNETCORE_ENVIRONMENT="Staging"
-#ENV UsersEndpoint=""
 
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MinimalFrontend.dll"]
